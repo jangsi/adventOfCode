@@ -30,6 +30,47 @@ var codec = map[string]string{
 	"Z": Scissors,
 }
 
+var scoreByHand = map[string]int{
+	Rock:     RockScore,
+	Paper:    PaperScore,
+	Scissors: ScissorsScore,
+}
+
+type game struct {
+	self string
+	beat string
+}
+
+var gameRounds = []game{
+	{
+		self: Rock,
+		beat: Scissors,
+	},
+	{
+		self: Paper,
+		beat: Rock,
+	},
+	{
+		self: Scissors,
+		beat: Paper,
+	},
+}
+
+var gameRoundByHand = map[string]game{
+	Rock: {
+		self: Rock,
+		beat: Scissors,
+	},
+	Paper: {
+		self: Paper,
+		beat: Rock,
+	},
+	Scissors: {
+		self: Scissors,
+		beat: Paper,
+	},
+}
+
 func main() {
 	answerOne, err := parseStrategy(playRoundOne)
 	if err != nil {
@@ -64,80 +105,35 @@ func parseStrategy(strat func(them string, you string) int) (int, error) {
 	return total, nil
 }
 
-type game struct {
-	self string
-	beat string
-}
-
 // The winner of the whole tournament is the player with the highest score.
 // Your total score is the sum of your scores for each round.
 // The score for a single round is the score for the shape you selected
 // (1 for Rock, 2 for Paper, and 3 for Scissors) plus the score for the outcome of the round
 // (0 if you lost, 3 if the round was a draw, and 6 if you won).
 func playRoundOne(them string, you string) int {
-	gameRound := game{
-		self: you,
-	}
-	var score int
-	switch codec[you] {
-	case Rock:
-		gameRound.beat = Scissors
-		score = RockScore
-	case Paper:
-		gameRound.beat = Rock
-		score = PaperScore
-	case Scissors:
-		gameRound.beat = Paper
-		score = ScissorsScore
-	}
 	if codec[them] == codec[you] {
-		return score + DrawScore
+		return scoreByHand[codec[you]] + DrawScore
 	}
-	if gameRound.beat == codec[them] {
-		return score + WinScore
+	round := gameRoundByHand[codec[you]]
+	if round.beat == codec[them] {
+		return scoreByHand[codec[you]] + WinScore
 	}
-	return score + LostScore
+	return scoreByHand[codec[you]] + LostScore
 }
 
 // "Anyway, the second column says how the round needs to end: X means you need to lose,
 // Y means you need to end the round in a draw, and Z means you need to win. Good luck!"
 func playRoundReal(them string, you string) int {
-	var score int
 	switch you {
 	case "X":
-		score = LostScore
-		if codec[them] == Rock {
-			return score + ScissorsScore
-		}
-		if codec[them] == Paper {
-			return score + RockScore
-		}
-		if codec[them] == Scissors {
-			return score + PaperScore
-		}
+		round := gameRoundByHand[codec[them]]
+		return LostScore + scoreByHand[round.beat]
 	case "Y":
-		score = DrawScore
-		if codec[them] == Rock {
-			return score + RockScore
-		}
-		if codec[them] == Paper {
-			return score + PaperScore
-		}
-		if codec[them] == Scissors {
-			return score + ScissorsScore
-		}
+		return DrawScore + scoreByHand[codec[them]]
 	case "Z":
-		score = WinScore
-		if codec[them] == Rock {
-			return score + PaperScore
-		}
-		if codec[them] == Paper {
-			return score + ScissorsScore
-		}
-		if codec[them] == Scissors {
-			return score + RockScore
-		}
+		round := gameRoundByHand[gameRoundByHand[codec[them]].beat]
+		return WinScore + scoreByHand[round.beat]
 	}
 
-	return score
+	return 0
 }
