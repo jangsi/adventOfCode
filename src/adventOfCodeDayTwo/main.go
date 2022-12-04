@@ -57,18 +57,9 @@ var gameRounds = []game{
 }
 
 var gameRoundByHand = map[string]game{
-	Rock: {
-		self: Rock,
-		beat: Scissors,
-	},
-	Paper: {
-		self: Paper,
-		beat: Rock,
-	},
-	Scissors: {
-		self: Scissors,
-		beat: Paper,
-	},
+	Rock:     gameRounds[0],
+	Paper:    gameRounds[1],
+	Scissors: gameRounds[2],
 }
 
 func main() {
